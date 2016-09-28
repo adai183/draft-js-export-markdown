@@ -10,7 +10,6 @@ It was extracted from [React-RTE](https://react-rte.org) and placed into a separ
 
     npm install --save megadraft-js-export-markdown
 
-This project is still under development. If you want to help out, please open an issue to discuss or join us on [Slack](https://draftjs.slack.com/).
 
 ## How to Use
 
@@ -18,6 +17,7 @@ This project is still under development. If you want to help out, please open an
 import { stateToMarkdown } from 'megadraft-js-export-markdown'
 let html = stateToMarkdown(contentState);
 ```
+This project is still under development. If you want to help out, please open an issue to discuss or join us on [Slack](https://draftjs.slack.com/).
 
 ## License
 

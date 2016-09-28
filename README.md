@@ -8,9 +8,16 @@ It was extracted from [React-RTE](https://react-rte.org) and placed into a separ
 
 ## Installation
 
-    npm install --save draft-js-export-markdown
+    npm install --save megadraft-js-export-markdown
 
 This project is still under development. If you want to help out, please open an issue to discuss or join us on [Slack](https://draftjs.slack.com/).
+
+## How to Use
+
+```javascript
+import { stateToMarkdown } from 'megadraft-js-export-markdown'
+let html = stateToMarkdown(contentState);
+```
 
 ## License
 

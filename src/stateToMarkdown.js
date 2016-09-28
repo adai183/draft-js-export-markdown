@@ -1,246 +1,273 @@
-/* @flow */
+'use strict';
 
-import {
-  getEntityRanges,
-  BLOCK_TYPE,
-  ENTITY_TYPE,
-  INLINE_STYLE,
-} from 'draft-js-utils';
-import {Entity} from 'draft-js';
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
 
-import type {ContentState, ContentBlock} from 'draft-js';
+var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
 
-const {
-  BOLD,
-  CODE,
-  ITALIC,
-  STRIKETHROUGH,
-  UNDERLINE,
-} = INLINE_STYLE;
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-const CODE_INDENT = '    ';
+exports.default = stateToMarkdown;
 
-class MarkupGenerator {
-  blocks: Array<ContentBlock>;
-  contentState: ContentState;
-  currentBlock: number;
-  output: Array<string>;
-  totalBlocks: number;
-  listItemCounts: Object;
+var _draftJsUtils = require('draft-js-utils');
 
-  constructor(contentState: ContentState) {
+var _draftJs = require('draft-js');
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var BOLD = _draftJsUtils.INLINE_STYLE.BOLD;
+var CODE = _draftJsUtils.INLINE_STYLE.CODE;
+var ITALIC = _draftJsUtils.INLINE_STYLE.ITALIC;
+var STRIKETHROUGH = _draftJsUtils.INLINE_STYLE.STRIKETHROUGH;
+var UNDERLINE = _draftJsUtils.INLINE_STYLE.UNDERLINE;
+
+
+var CODE_INDENT = '    ';
+
+var MarkupGenerator = function () {
+  function MarkupGenerator(contentState) {
+    _classCallCheck(this, MarkupGenerator);
+
     this.contentState = contentState;
   }
 
-  generate(): string {
-    this.output = [];
-    this.blocks = this.contentState.getBlockMap().toArray();
-    this.totalBlocks = this.blocks.length;
-    this.currentBlock = 0;
-    this.listItemCounts = {};
-    while (this.currentBlock < this.totalBlocks) {
-      this.processBlock();
+  _createClass(MarkupGenerator, [{
+    key: 'generate',
+    value: function generate() {
+      this.output = [];
+      this.blocks = this.contentState.getBlockMap().toArray();
+      this.totalBlocks = this.blocks.length;
+      this.currentBlock = 0;
+      this.listItemCounts = {};
+      while (this.currentBlock < this.totalBlocks) {
+        this.processBlock();
+      }
+      return this.output.join('');
     }
-    return this.output.join('');
-  }
-
-  processBlock() {
-    let block = this.blocks[this.currentBlock];
-    let blockType = block.getType();
-    switch (blockType) {
-      case BLOCK_TYPE.HEADER_ONE: {
-        this.insertLineBreaks(1);
-        this.output.push('# ' + this.renderBlockContent(block) + '\n');
-        break;
-      }
-      case BLOCK_TYPE.HEADER_TWO: {
-        this.insertLineBreaks(1);
-        this.output.push('## ' + this.renderBlockContent(block) + '\n');
-        break;
-      }
-      case BLOCK_TYPE.HEADER_THREE: {
-        this.insertLineBreaks(1);
-        this.output.push('### ' + this.renderBlockContent(block) + '\n');
-        break;
-      }
-      case BLOCK_TYPE.HEADER_FOUR: {
-        this.insertLineBreaks(1);
-        this.output.push('#### ' + this.renderBlockContent(block) + '\n');
-        break;
-      }
-      case BLOCK_TYPE.HEADER_FIVE: {
-        this.insertLineBreaks(1);
-        this.output.push('##### ' + this.renderBlockContent(block) + '\n');
-        break;
-      }
-      case BLOCK_TYPE.HEADER_SIX: {
-        this.insertLineBreaks(1);
-        this.output.push('###### ' + this.renderBlockContent(block) + '\n');
-        break;
-      }
-      case BLOCK_TYPE.UNORDERED_LIST_ITEM: {
-        let blockDepth = block.getDepth();
-        let lastBlock = this.getLastBlock();
-        let lastBlockType = lastBlock ? lastBlock.getType() : null;
-        let lastBlockDepth = lastBlock && canHaveDepth(lastBlockType) ?
-          lastBlock.getDepth() :
-          null;
-        if (
-          lastBlockType !== blockType &&
-          lastBlockDepth !== blockDepth - 1
-        ) {
-          this.insertLineBreaks(1);
-          // Insert an additional line break if following opposite list type.
-          if (lastBlockType === BLOCK_TYPE.ORDERED_LIST_ITEM) {
+  }, {
+    key: 'processBlock',
+    value: function processBlock() {
+      var block = this.blocks[this.currentBlock];
+      var blockType = block.getType();
+      switch (blockType) {
+        case _draftJsUtils.BLOCK_TYPE.HEADER_ONE:
+          {
             this.insertLineBreaks(1);
+            this.output.push('# ' + this.renderBlockContent(block) + '\n');
+            break;
           }
-        }
-        let indent = ' '.repeat(block.depth * 2);
-        this.output.push(
-          indent + '- ' + this.renderBlockContent(block) + '\n'
-        );
-        break;
-      }
-      case BLOCK_TYPE.ORDERED_LIST_ITEM: {
-        let blockDepth = block.getDepth();
-        let lastBlock = this.getLastBlock();
-        let lastBlockType = lastBlock ? lastBlock.getType() : null;
-        let lastBlockDepth = lastBlock && canHaveDepth(lastBlockType) ?
-          lastBlock.getDepth() :
-          null;
-        if (lastBlockType !== blockType && lastBlockDepth !== blockDepth - 1) {
-          this.insertLineBreaks(1);
-          // Insert an additional line break if following opposite list type.
-          if (lastBlockType === BLOCK_TYPE.UNORDERED_LIST_ITEM) {
+        case _draftJsUtils.BLOCK_TYPE.HEADER_TWO:
+          {
             this.insertLineBreaks(1);
+            this.output.push('## ' + this.renderBlockContent(block) + '\n');
+            break;
           }
-        }
-        let indent = ' '.repeat(blockDepth * 2);
-        // TODO: figure out what to do with two-digit numbers
-        let count = this.getListItemCount(block) % 10;
-        this.output.push(
-          indent + `${count}. ` + this.renderBlockContent(block) + '\n'
-        );
-        break;
+        case _draftJsUtils.BLOCK_TYPE.HEADER_THREE:
+          {
+            this.insertLineBreaks(1);
+            this.output.push('### ' + this.renderBlockContent(block) + '\n');
+            break;
+          }
+        case _draftJsUtils.BLOCK_TYPE.HEADER_FOUR:
+          {
+            this.insertLineBreaks(1);
+            this.output.push('#### ' + this.renderBlockContent(block) + '\n');
+            break;
+          }
+        case _draftJsUtils.BLOCK_TYPE.HEADER_FIVE:
+          {
+            this.insertLineBreaks(1);
+            this.output.push('##### ' + this.renderBlockContent(block) + '\n');
+            break;
+          }
+        case _draftJsUtils.BLOCK_TYPE.HEADER_SIX:
+          {
+            this.insertLineBreaks(1);
+            this.output.push('###### ' + this.renderBlockContent(block) + '\n');
+            break;
+          }
+        case _draftJsUtils.BLOCK_TYPE.UNORDERED_LIST_ITEM:
+          {
+            var blockDepth = block.getDepth();
+            var lastBlock = this.getLastBlock();
+            var lastBlockType = lastBlock ? lastBlock.getType() : null;
+            var lastBlockDepth = lastBlock && canHaveDepth(lastBlockType) ? lastBlock.getDepth() : null;
+            if (lastBlockType !== blockType && lastBlockDepth !== blockDepth - 1) {
+              this.insertLineBreaks(1);
+              // Insert an additional line break if following opposite list type.
+              if (lastBlockType === _draftJsUtils.BLOCK_TYPE.ORDERED_LIST_ITEM) {
+                this.insertLineBreaks(1);
+              }
+            }
+            var indent = ' '.repeat(block.depth * 2);
+            this.output.push(indent + '- ' + this.renderBlockContent(block) + '\n');
+            break;
+          }
+        case _draftJsUtils.BLOCK_TYPE.ORDERED_LIST_ITEM:
+          {
+            var _blockDepth = block.getDepth();
+            var _lastBlock = this.getLastBlock();
+            var _lastBlockType = _lastBlock ? _lastBlock.getType() : null;
+            var _lastBlockDepth = _lastBlock && canHaveDepth(_lastBlockType) ? _lastBlock.getDepth() : null;
+            if (_lastBlockType !== blockType && _lastBlockDepth !== _blockDepth - 1) {
+              this.insertLineBreaks(1);
+              // Insert an additional line break if following opposite list type.
+              if (_lastBlockType === _draftJsUtils.BLOCK_TYPE.UNORDERED_LIST_ITEM) {
+                this.insertLineBreaks(1);
+              }
+            }
+            var _indent = ' '.repeat(_blockDepth * 2);
+            // TODO: figure out what to do with two-digit numbers
+            var count = this.getListItemCount(block) % 10;
+            this.output.push(_indent + (count + '. ') + this.renderBlockContent(block) + '\n');
+            break;
+          }
+        case _draftJsUtils.BLOCK_TYPE.BLOCKQUOTE:
+          {
+            this.insertLineBreaks(1);
+            this.output.push(' > ' + this.renderBlockContent(block) + '\n');
+            break;
+          }
+        case _draftJsUtils.BLOCK_TYPE.CODE:
+          {
+            this.insertLineBreaks(1);
+            this.output.push(CODE_INDENT + this.renderBlockContent(block) + '\n');
+            break;
+          }
+        case 'atomic':
+            var data = block.getData()
+            this.insertLineBreaks(1);
+            switch (data._root.entries[1][1]) {
+              case 'image':
+                var imgUrl = data._root.entries[0][1]
+                var caption = data._root.entries[3] ? data._root.entries[3][1] : 'article image'
+                this.output.push('[' + caption + ']' + '(' + imgUrl + ')');
+                break;
+              case 'video':
+                var videoUrl = data._root.entries[0][1]
+                this.output.push('<iframe width="560" height="315" src="' + videoUrl + '" frameborder="0" allowfullscreen></iframe>');
+                break;
+              default:
+            }
+          break;
+        default:
+          {
+            this.insertLineBreaks(1);
+            this.output.push(this.renderBlockContent(block) + '\n');
+            break;
+          }
       }
-      case BLOCK_TYPE.BLOCKQUOTE: {
-        this.insertLineBreaks(1);
-        this.output.push(' > ' + this.renderBlockContent(block) + '\n');
-        break;
+      this.currentBlock += 1;
+    }
+  }, {
+    key: 'getLastBlock',
+    value: function getLastBlock() {
+      return this.blocks[this.currentBlock - 1];
+    }
+  }, {
+    key: 'getNextBlock',
+    value: function getNextBlock() {
+      return this.blocks[this.currentBlock + 1];
+    }
+  }, {
+    key: 'getListItemCount',
+    value: function getListItemCount(block) {
+      var blockType = block.getType();
+      var blockDepth = block.getDepth();
+      // To decide if we need to start over we need to backtrack (skipping list
+      // items that are of greater depth)
+      var index = this.currentBlock - 1;
+      var prevBlock = this.blocks[index];
+      while (prevBlock && canHaveDepth(prevBlock.getType()) && prevBlock.getDepth() > blockDepth) {
+        index -= 1;
+        prevBlock = this.blocks[index];
       }
-      case BLOCK_TYPE.CODE: {
-        this.insertLineBreaks(1);
-        this.output.push(CODE_INDENT + this.renderBlockContent(block) + '\n');
-        break;
+      if (!prevBlock || prevBlock.getType() !== blockType || prevBlock.getDepth() !== blockDepth) {
+        this.listItemCounts[blockDepth] = 0;
       }
-      default: {
-        this.insertLineBreaks(1);
-        this.output.push(this.renderBlockContent(block) + '\n');
-        break;
+      return this.listItemCounts[blockDepth] = this.listItemCounts[blockDepth] + 1;
+    }
+  }, {
+    key: 'insertLineBreaks',
+    value: function insertLineBreaks() {
+      if (this.currentBlock > 0) {
+        this.output.push('\n');
       }
     }
-    this.currentBlock += 1;
-  }
+  }, {
+    key: 'renderBlockContent',
+    value: function renderBlockContent(block) {
+      var blockType = block.getType();
+      var text = block.getText();
+      if (text === '') {
+        // Prevent element collapse if completely empty.
+        // TODO: Replace with constant.
+        return '​';
+      }
+      var charMetaList = block.getCharacterList();
+      var entityPieces = (0, _draftJsUtils.getEntityRanges)(text, charMetaList);
+      return entityPieces.map(function (_ref) {
+        var _ref2 = _slicedToArray(_ref, 2);
 
-  getLastBlock(): ContentBlock {
-    return this.blocks[this.currentBlock - 1];
-  }
+        var entityKey = _ref2[0];
+        var stylePieces = _ref2[1];
 
-  getNextBlock(): ContentBlock {
-    return this.blocks[this.currentBlock + 1];
-  }
+        var content = stylePieces.map(function (_ref3) {
+          var _ref4 = _slicedToArray(_ref3, 2);
 
-  getListItemCount(block: ContentBlock): number {
-    let blockType = block.getType();
-    let blockDepth = block.getDepth();
-    // To decide if we need to start over we need to backtrack (skipping list
-    // items that are of greater depth)
-    let index = this.currentBlock - 1;
-    let prevBlock = this.blocks[index];
-    while (
-      prevBlock &&
-      canHaveDepth(prevBlock.getType()) &&
-      prevBlock.getDepth() > blockDepth
-    ) {
-      index -= 1;
-      prevBlock = this.blocks[index];
-    }
-    if (
-      !prevBlock ||
-      prevBlock.getType() !== blockType ||
-      prevBlock.getDepth() !== blockDepth
-    ) {
-      this.listItemCounts[blockDepth] = 0;
-    }
-    return (
-      this.listItemCounts[blockDepth] = this.listItemCounts[blockDepth] + 1
-    );
-  }
+          var text = _ref4[0];
+          var style = _ref4[1];
 
-  insertLineBreaks() {
-    if (this.currentBlock > 0) {
-      this.output.push('\n');
-    }
-  }
-
-  renderBlockContent(block: ContentBlock): string {
-    let blockType = block.getType();
-    let text = block.getText();
-    if (text === '') {
-      // Prevent element collapse if completely empty.
-      // TODO: Replace with constant.
-      return '\u200B';
-    }
-    let charMetaList = block.getCharacterList();
-    let entityPieces = getEntityRanges(text, charMetaList);
-    return entityPieces.map(([entityKey, stylePieces]) => {
-      let content = stylePieces.map(([text, style]) => {
-        // Don't allow empty inline elements.
-        if (!text) {
-          return '';
+          // Don't allow empty inline elements.
+          if (!text) {
+            return '';
+          }
+          var content = encodeContent(text);
+          if (style.has(BOLD)) {
+            content = '**' + content + '**';
+          }
+          if (style.has(UNDERLINE)) {
+            // TODO: encode `+`?
+            content = '++' + content + '++';
+          }
+          if (style.has(ITALIC)) {
+            content = '_' + content + '_';
+          }
+          if (style.has(STRIKETHROUGH)) {
+            // TODO: encode `~`?
+            content = '~~' + content + '~~';
+          }
+          if (style.has(CODE)) {
+            content = blockType === _draftJsUtils.BLOCK_TYPE.CODE ? content : '`' + content + '`';
+          }
+          return content;
+        }).join('');
+        var entity = entityKey ? _draftJs.Entity.get(entityKey) : null;
+        if (entity != null && entity.getType() === _draftJsUtils.ENTITY_TYPE.LINK) {
+          var data = entity.getData();
+          var url = data.url || '';
+          var title = data.title ? ' "' + escapeTitle(data.title) + '"' : '';
+          return '[' + content + '](' + encodeURL(url) + title + ')';
+        } else if (entity != null && entity.getType() === _draftJsUtils.ENTITY_TYPE.IMAGE) {
+          var _data = entity.getData();
+          var src = _data.src || '';
+          var alt = _data.alt ? ' "' + escapeTitle(_data.alt) + '"' : '';
+          return '![' + alt + '](' + encodeURL(src) + ')';
+        } else {
+          return content;
         }
-        let content = encodeContent(text);
-        if (style.has(BOLD)) {
-          content = `**${content}**`;
-        }
-        if (style.has(UNDERLINE)) {
-          // TODO: encode `+`?
-          content = `++${content}++`;
-        }
-        if (style.has(ITALIC)) {
-          content = `_${content}_`;
-        }
-        if (style.has(STRIKETHROUGH)) {
-          // TODO: encode `~`?
-          content = `~~${content}~~`;
-        }
-        if (style.has(CODE)) {
-          content = (blockType === BLOCK_TYPE.CODE) ? content : '`' + content + '`';
-        }
-        return content;
       }).join('');
-      let entity = entityKey ? Entity.get(entityKey) : null;
-      if (entity != null && entity.getType() === ENTITY_TYPE.LINK) {
-        let data = entity.getData();
-        let url = data.url || '';
-        let title = data.title ? ` "${escapeTitle(data.title)}"` : '';
-        return `[${content}](${encodeURL(url)}${title})`;
-      } else if (entity != null && entity.getType() === ENTITY_TYPE.IMAGE) {
-        let data = entity.getData();
-        let src = data.src || '';
-        let alt = data.alt ? ` "${escapeTitle(data.alt)}"` : '';
-        return `![${alt}](${encodeURL(src)})`;
-      } else {
-        return content;
-      }
-    }).join('');
-  }
-}
+    }
+  }]);
 
-function canHaveDepth(blockType: any): boolean {
+  return MarkupGenerator;
+}();
+
+function canHaveDepth(blockType) {
   switch (blockType) {
-    case BLOCK_TYPE.UNORDERED_LIST_ITEM:
-    case BLOCK_TYPE.ORDERED_LIST_ITEM:
+    case _draftJsUtils.BLOCK_TYPE.UNORDERED_LIST_ITEM:
+    case _draftJsUtils.BLOCK_TYPE.ORDERED_LIST_ITEM:
       return true;
     default:
       return false;
@@ -262,6 +289,6 @@ function escapeTitle(text) {
   return text.replace(/"/g, '\\"');
 }
 
-export default function stateToMarkdown(content: ContentState): string {
+function stateToMarkdown(content) {
   return new MarkupGenerator(content).generate();
 }

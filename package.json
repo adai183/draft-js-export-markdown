@@ -1,7 +1,7 @@
 {
-  "name": "draft-js-export-markdown",
+  "name": "megadraft-js-export-markdown",
   "version": "0.2.0",
-  "description": "DraftJS: Export ContentState to Markdown",
+  "description": "MegadraftJS: Export ContentState to Markdown",
   "main": "lib/main.js",
   "scripts": {
     "build": "babel src --ignore '_*' --out-dir lib",
@@ -38,10 +38,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/sstur/draft-js-export-markdown.git"
+    "url": "https://github.com/adai183/draft-js-export-markdown.git"
   },
   "keywords": [
     "draft-js",
+    "megadraft-js",
     "export-markdown"
   ],
   "author": "sstur@me.com",
@@ -53,6 +54,10 @@
     {
       "name": "Simon Sturmer",
       "url": "https://github.com/sstur"
+    },
+    {
+      "name": "Andreas Daiminger",
+      "url": "https://github.com/adai183/"
     }
   ],
   "license": "ISC",

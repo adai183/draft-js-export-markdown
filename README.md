@@ -1,3 +1,5 @@
+# This is a fork to adapt draft-js-export-markdown to megadraft
+
 # DraftJS: Export ContentState to Markdown
 
 This is a module for [DraftJS](https://github.com/facebook/draft-js) that will export your editor content to Markdown.

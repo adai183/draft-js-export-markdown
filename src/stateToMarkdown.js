@@ -142,7 +142,7 @@ var MarkupGenerator = function () {
               case 'image':
                 var imgUrl = data._root.entries[0][1]
                 var caption = data._root.entries[3] ? data._root.entries[3][1] : 'article image'
-                this.output.push('[' + caption + ']' + '(' + imgUrl + ')');
+                this.output.push('![' + caption + ']' + '(' + imgUrl + ')');
                 break;
               case 'video':
                 var videoUrl = data._root.entries[0][1]

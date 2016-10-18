@@ -1,6 +1,6 @@
 {
   "name": "megadraft-js-export-markdown",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "MegadraftJS: Export ContentState to Markdown",
   "main": "lib/main.js",
   "scripts": {
